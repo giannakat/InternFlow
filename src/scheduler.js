@@ -13,7 +13,9 @@ function setResponded(value) {
 }
 
 function startScheduler(client) {
-  cron.schedule('57 4 * * *', async () => {
+  cron.schedule('27 5 * * *', async () => {
+    responded = false;
+
     const channel = await client.channels.fetch(channelId);
 
     const row = new ActionRowBuilder()
@@ -22,21 +24,37 @@ function startScheduler(client) {
           .setCustomId('confirm_timein')
           .setLabel('Confirm')
           .setStyle(ButtonStyle.Success),
-
         new ButtonBuilder()
           .setCustomId('cancel_timein')
           .setLabel('Cancel')
           .setStyle(ButtonStyle.Danger)
       );
 
-    await channel.send({
+    const reminderMessage = await channel.send({
       content: '⏰ OJT Time In Reminder\nAre you ready to time in?',
       components: [row]
     });
 
-    setTimeout(() => {
+    setTimeout(async () => {
       if (!responded) {
-        channel.send('⏰ No response received. Running automatic Time In...');
+        responded = true;
+
+        const disabledRow = new ActionRowBuilder()
+          .addComponents(
+            new ButtonBuilder()
+              .setCustomId('confirm_timein')
+              .setLabel('Confirm')
+              .setStyle(ButtonStyle.Success)
+              .setDisabled(true),
+            new ButtonBuilder()
+              .setCustomId('cancel_timein')
+              .setLabel('Cancel')
+              .setStyle(ButtonStyle.Danger)
+              .setDisabled(true)
+          );
+
+        await reminderMessage.edit({ components: [disabledRow] });
+        await channel.send('⏰ No response received. Running automatic Time In...');
         console.log('AUTO TIME IN TRIGGERED');
       }
     }, 30 * 1000);
