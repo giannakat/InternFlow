@@ -6,8 +6,14 @@ const {
 } = require('discord.js');
 const { channelId } = require('./config');
 
+let responded = false;
+
+function setResponded(value) {
+  responded = value;
+}
+
 function startScheduler(client) {
-  cron.schedule('42 4 * * *', async () => {
+  cron.schedule('57 4 * * *', async () => {
     const channel = await client.channels.fetch(channelId);
 
     const row = new ActionRowBuilder()
@@ -28,7 +34,14 @@ function startScheduler(client) {
       components: [row]
     });
 
+    setTimeout(() => {
+      if (!responded) {
+        channel.send('⏰ No response received. Running automatic Time In...');
+        console.log('AUTO TIME IN TRIGGERED');
+      }
+    }, 30 * 1000);
+
   });
 }
 
-module.exports = { startScheduler };
+module.exports = { startScheduler, setResponded };
