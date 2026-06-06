@@ -5,6 +5,8 @@ const {
   ButtonStyle
 } = require('discord.js');
 const { channelId } = require('./config');
+const { isWorkday } = require('./utils/isWorkday');
+const { timeIn } = require('./automation/ojt');
 
 let responded = false;
 
@@ -13,7 +15,11 @@ function setResponded(value) {
 }
 
 function startScheduler(client) {
-  cron.schedule('01 3 * * *', async () => {
+  cron.schedule('43 4 * * *', async () => {
+    if (!isWorkday()) {
+      return;
+    }
+
     responded = false;
 
     const channel = await client.channels.fetch(channelId);
@@ -55,7 +61,18 @@ function startScheduler(client) {
 
         await reminderMessage.edit({ components: [disabledRow] });
         await channel.send('⏰ No response received. Running automatic Time In...');
-        console.log('AUTO TIME IN TRIGGERED');
+
+        try {
+          const success = await timeIn();
+          await channel.send(
+            success
+              ? '✅ Auto Time In successful!'
+              : '❌ Auto Time In may have failed. Please check manually.'
+          );
+        } catch (err) {
+          console.error('Auto Time In error:', err);
+          await channel.send('❌ Auto Time In failed with an error. Please check manually.');
+        }
       }
     }, 30 * 1000);
 
