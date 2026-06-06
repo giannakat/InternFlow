@@ -13,7 +13,7 @@ function setResponded(value) {
 }
 
 function startScheduler(client) {
-  cron.schedule('27 5 * * *', async () => {
+  cron.schedule('01 3 * * *', async () => {
     responded = false;
 
     const channel = await client.channels.fetch(channelId);

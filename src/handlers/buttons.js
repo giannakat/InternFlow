@@ -1,5 +1,6 @@
 const { MessageFlags, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { setResponded } = require('../scheduler');
+const { timeIn } = require('../automation/ojt');
 
 async function handleButtons(interaction) {
   if (!interaction.isButton()) return;
@@ -25,7 +26,20 @@ async function handleButtons(interaction) {
       content: '✅ Time In confirmed. Running automation...',
       flags: MessageFlags.Ephemeral
     });
+
     console.log('RUN TIME IN AUTOMATION');
+
+   try {
+      const success = await timeIn();
+      await interaction.channel.send(
+        success
+          ? '✅ Time In successful!'
+          : '❌ Time In may have failed. Please check manually.'
+      );
+    } catch (err) {
+      console.error('Time In error:', err);
+      await interaction.channel.send('❌ Time In failed with an error. Please check manually.');
+    }
   }
 
   if (interaction.customId === 'cancel_timein') {
