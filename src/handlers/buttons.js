@@ -55,6 +55,7 @@ async function handleButtons(interaction) {
   }
 
   if (interaction.customId === 'confirm_timeout') {
+  setState({ timeOutResponded: true });  
   const disabledRow = new ActionRowBuilder()
     .addComponents(
       new ButtonBuilder()

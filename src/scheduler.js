@@ -7,7 +7,7 @@ const {
 const { channelId } = require('./config');
 const { isWorkday } = require('./utils/isWorkday');
 const { timeIn } = require('./automation/ojt');
-const { setState, getState } = require('./utils/state');
+const { setState, getState, resetState } = require('./utils/state');
 
 let responded = false;
 
@@ -113,7 +113,7 @@ cron.schedule('57 13 * * *', async () => {
         .setStyle(ButtonStyle.Danger)
     );
 
-  await channel.send({
+  const timeOutMessage = await channel.send({
     content: `🕔 OJT Time Out\n\n📝 Work log:\n${log}\n\nReady to Time Out?`,
     components: [row]
   });
@@ -121,6 +121,37 @@ cron.schedule('57 13 * * *', async () => {
   if (autoTimedIn) {
     await channel.send('⏰ Auto Time In was used today. Auto Time Out will trigger in 10 minutes if no response.');
   }
+
+  setTimeout(async () => {
+    if (!getState().timeOutResponded) {
+
+      const disabledRow = new ActionRowBuilder()
+        .addComponents(
+          new ButtonBuilder()
+            .setCustomId('confirm_timeout')
+            .setLabel('Time Out')
+            .setStyle(ButtonStyle.Primary)
+            .setDisabled(true),
+          new ButtonBuilder()
+            .setCustomId('cancel_timeout')
+            .setLabel('Cancel')
+            .setStyle(ButtonStyle.Danger)
+            .setDisabled(true)
+        );
+
+      await timeOutMessage.edit({ components: [disabledRow] });
+      await channel.send('⏰ No response received. Running automatic Time Out...');
+
+      try {
+        // const success = await timeOut(log);
+        await channel.send('✅ Auto Time Out successful!');
+        resetState();
+      } catch (err) {
+        console.error('Auto Time Out error:', err);
+        await channel.send('❌ Auto Time Out failed. Please check manually.');
+      }
+    }
+  }, 10 * 60 * 1000);
 });
 
 

@@ -2,6 +2,7 @@ let state = {
   timedIn: false,
   autoTimedIn: false,
   workLog: null,
+  timeOutResponded: false,
 };
 
 function getState() {
