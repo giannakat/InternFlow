@@ -1,6 +1,7 @@
 const { MessageFlags, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { setResponded } = require('../scheduler');
 const { timeIn } = require('../automation/ojt');
+const { setState, resetState } = require('../utils/state');
 
 async function handleButtons(interaction) {
   if (!interaction.isButton()) return;
@@ -21,6 +22,7 @@ async function handleButtons(interaction) {
 
   if (interaction.customId === 'confirm_timein') {
     setResponded(true);
+    setState({ timedIn: true, autoTimedIn: false });
     await interaction.message.edit({ components: [disabledRow] });
     await interaction.reply({
       content: '✅ Time In confirmed. Running automation...',
@@ -50,6 +52,59 @@ async function handleButtons(interaction) {
       flags: MessageFlags.Ephemeral
     });
     console.log('CANCELLED');
+  }
+
+  if (interaction.customId === 'confirm_timeout') {
+  const disabledRow = new ActionRowBuilder()
+    .addComponents(
+      new ButtonBuilder()
+        .setCustomId('confirm_timeout')
+        .setLabel('Time Out')
+        .setStyle(ButtonStyle.Primary)
+        .setDisabled(true),
+      new ButtonBuilder()
+        .setCustomId('cancel_timeout')
+        .setLabel('Cancel')
+        .setStyle(ButtonStyle.Danger)
+        .setDisabled(true)
+    );
+
+  await interaction.message.edit({ components: [disabledRow] });
+  await interaction.reply({
+    content: '⏳ Running Time Out automation...',
+    flags: MessageFlags.Ephemeral
+  });
+
+  try {
+    const success = await timeOut(log);
+    await interaction.channel.send('✅ Time Out successful!');
+    resetState();
+  } catch (err) {
+    console.error('Time Out error:', err);
+    await interaction.channel.send('❌ Time Out failed. Please check manually.');
+  }
+}
+
+  if (interaction.customId === 'cancel_timeout') {
+    const disabledRow = new ActionRowBuilder()
+      .addComponents(
+        new ButtonBuilder()
+          .setCustomId('confirm_timeout')
+          .setLabel('Time Out')
+          .setStyle(ButtonStyle.Primary)
+          .setDisabled(true),
+        new ButtonBuilder()
+          .setCustomId('cancel_timeout')
+          .setLabel('Cancel')
+          .setStyle(ButtonStyle.Danger)
+          .setDisabled(true)
+      );
+
+    await interaction.message.edit({ components: [disabledRow] });
+    await interaction.reply({
+      content: '❌ Time Out cancelled.',
+      flags: MessageFlags.Ephemeral
+    });
   }
 }
 

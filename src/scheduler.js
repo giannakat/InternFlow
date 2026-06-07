@@ -7,6 +7,7 @@ const {
 const { channelId } = require('./config');
 const { isWorkday } = require('./utils/isWorkday');
 const { timeIn } = require('./automation/ojt');
+const { setState, getState } = require('./utils/state');
 
 let responded = false;
 
@@ -44,7 +45,7 @@ function startScheduler(client) {
     setTimeout(async () => {
       if (!responded) {
         responded = true;
-
+        setState({ timedIn: true, autoTimedIn: true });
         const disabledRow = new ActionRowBuilder()
           .addComponents(
             new ButtonBuilder()
@@ -77,6 +78,52 @@ function startScheduler(client) {
     }, 30 * 1000);
 
   });
+// 4:50 AM - Work log collection
+cron.schedule('56 13 * * *', async () => {
+  const { timedIn } = getState();
+  if (!timedIn) {
+    console.log('Not timed in today. Skipping work log prompt.');
+    return;
+  }
+
+  const channel = await client.channels.fetch(channelId);
+  await channel.send('📝 What did you work on today? Reply with your work summary.');
+});
+
+// 5:00 AM - Time Out prompt
+cron.schedule('57 13 * * *', async () => {
+  const { timedIn, autoTimedIn, workLog } = getState();
+  if (!timedIn) {
+    console.log('Not timed in today. Skipping Time Out.');
+    return;
+  }
+
+  const channel = await client.channels.fetch(channelId);
+  const log = workLog || 'Completed OJT tasks for the day.';
+
+  const row = new ActionRowBuilder()
+    .addComponents(
+      new ButtonBuilder()
+        .setCustomId('confirm_timeout')
+        .setLabel('Time Out')
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setCustomId('cancel_timeout')
+        .setLabel('Cancel')
+        .setStyle(ButtonStyle.Danger)
+    );
+
+  await channel.send({
+    content: `🕔 OJT Time Out\n\n📝 Work log:\n${log}\n\nReady to Time Out?`,
+    components: [row]
+  });
+
+  if (autoTimedIn) {
+    await channel.send('⏰ Auto Time In was used today. Auto Time Out will trigger in 10 minutes if no response.');
+  }
+});
+
+
 }
 
 module.exports = { startScheduler, setResponded };
