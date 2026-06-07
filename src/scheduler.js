@@ -64,12 +64,13 @@ function startScheduler(client) {
         await channel.send('⏰ No response received. Running automatic Time In...');
 
         try {
-          const success = await timeIn();
-          await channel.send(
-            success
+          const { success, screenshotPath } = await timeIn();
+          await channel.send({
+            content: success
               ? '✅ Auto Time In successful!'
-              : '❌ Auto Time In may have failed. Please check manually.'
-          );
+              : '❌ Auto Time In may have failed. Please check manually.',
+            files: screenshotPath ? [screenshotPath] : []
+          });
         } catch (err) {
           console.error('Auto Time In error:', err);
           await channel.send('❌ Auto Time In failed with an error. Please check manually.');
@@ -124,7 +125,7 @@ cron.schedule('57 13 * * *', async () => {
 
   setTimeout(async () => {
     if (!getState().timeOutResponded) {
-
+      setState({ timeOutResponded: true });
       const disabledRow = new ActionRowBuilder()
         .addComponents(
           new ButtonBuilder()

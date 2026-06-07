@@ -32,12 +32,13 @@ async function handleButtons(interaction) {
     console.log('RUN TIME IN AUTOMATION');
 
    try {
-      const success = await timeIn();
-      await interaction.channel.send(
-        success
+      const { success, screenshotPath } = await timeIn();
+      await interaction.channel.send({
+        content: success
           ? '✅ Time In successful!'
-          : '❌ Time In may have failed. Please check manually.'
-      );
+          : '❌ Time In may have failed. Please check manually.',
+        files: screenshotPath ? [screenshotPath] : []
+      });
     } catch (err) {
       console.error('Time In error:', err);
       await interaction.channel.send('❌ Time In failed with an error. Please check manually.');

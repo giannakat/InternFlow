@@ -53,6 +53,10 @@ async function timeIn() {
 
   const success = await verifySuccess(frame);
 
+  const screenshotPath = `screenshots/timein-${Date.now()}.png`;
+  await page.screenshot({ path: screenshotPath });
+  console.log(`Screenshot saved: ${screenshotPath}`);  
+
   if (success) {
     console.log('Time In successful.');
   } else {
@@ -60,7 +64,7 @@ async function timeIn() {
   }
 
   await browser.close();
-  return success;
+  return { success, screenshotPath };
 }
 
 async function verifySuccess(frame) {
