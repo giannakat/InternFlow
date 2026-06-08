@@ -1,7 +1,7 @@
 const { MessageFlags, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { setResponded } = require('../scheduler');
 const { timeIn, timeOut } = require('../automation/ojt');
-const { setState, resetState } = require('../utils/state');
+const { setState, resetState, getState } = require('../utils/state');
 
 async function handleButtons(interaction) {
   if (!interaction.isButton()) return;
