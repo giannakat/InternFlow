@@ -16,7 +16,7 @@ function setResponded(value) {
 }
 
 function startScheduler(client) {
-  cron.schedule('43 4 * * *', async () => {
+  cron.schedule('45 19 * * *', async () => {
     if (!isWorkday()) {
       return;
     }
@@ -80,7 +80,7 @@ function startScheduler(client) {
 
   });
 // 4:50 AM - Work log collection
-cron.schedule('56 13 * * *', async () => {
+cron.schedule('00 21 * * *', async () => {
   const { timedIn } = getState();
   if (!timedIn) {
     console.log('Not timed in today. Skipping work log prompt.');
@@ -92,7 +92,7 @@ cron.schedule('56 13 * * *', async () => {
 });
 
 // 5:00 AM - Time Out prompt
-cron.schedule('57 13 * * *', async () => {
+cron.schedule('25 5 * * *', async () => {
   const { timedIn, autoTimedIn, workLog } = getState();
   if (!timedIn) {
     console.log('Not timed in today. Skipping Time Out.');
@@ -157,7 +157,7 @@ cron.schedule('57 13 * * *', async () => {
         await channel.send('❌ Auto Time Out failed. Please check manually.');
       }
     }
-  }, 10 * 60 * 1000);
+  }, 20 * 1000);
 });
 
 

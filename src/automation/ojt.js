@@ -87,13 +87,33 @@ async function timeOut(logText) {
   await frame.getByRole('button', { name: 'Attendance', exact: true }).click();
   await page.waitForTimeout(3000);
 
-  // these selectors will be confirmed tomorrow during your actual shift
-  await frame.getByRole('button', { name: 'Time - Out', exact: true }).click();
-  await page.waitForTimeout(2000);
-  await frame.getByRole('button', { name: 'YES', exact: true }).click();
+  // fill popup activity log
+  await frame.locator('textarea[appmagic-control="FailedInput_1textarea"]').fill(logText);
+  await page.waitForTimeout(1000);
+
+  // select AM/PM
+  await frame.getByRole('button', { name: /\. AM/ }).click();
+  await page.waitForTimeout(500);
+  await frame.getByRole('option', { name: 'AM' }).click();
+  await page.waitForTimeout(500);
+
+  // select hour
+  await frame.getByRole('button', { name: /\. 12/ }).click();
+  await page.waitForTimeout(500);
+  await frame.getByRole('option', { name: '5' }).click();
+  await page.waitForTimeout(500);
+
+  // select minutes
+  await frame.getByRole('button', { name: /\. 00/ }).click();
+  await page.waitForTimeout(500);
+  await frame.getByRole('option', { name: '00' }).click();
+  await page.waitForTimeout(500);
+
+  // submit
+  await frame.getByRole('button', { name: 'Submit', exact: true }).click();
   await page.waitForTimeout(3000);
 
-  const success = await verifySuccess(frame);
+  const success = await verifyTimeOut(frame);
 
   const screenshotPath = `screenshots/timeout-${Date.now()}.png`;
   await page.screenshot({ path: screenshotPath });
@@ -103,4 +123,14 @@ async function timeOut(logText) {
   return { success, screenshotPath };
 }
 
-module.exports = { login, timeIn, timeOut, verifySuccess };
+async function verifyTimeOut(frame) {
+  try {
+    return await frame
+      .getByText('No Active Session')
+      .isVisible({ timeout: 10000 });
+  } catch {
+    return false;
+  }
+}
+
+module.exports = { login, timeIn, timeOut, verifySuccess, verifyTimeOut };
