@@ -1,6 +1,6 @@
 const { MessageFlags, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { setResponded } = require('../scheduler');
-const { timeIn } = require('../automation/ojt');
+const { timeIn, timeOut } = require('../automation/ojt');
 const { setState, resetState } = require('../utils/state');
 
 async function handleButtons(interaction) {
@@ -56,7 +56,6 @@ async function handleButtons(interaction) {
   }
 
   if (interaction.customId === 'confirm_timeout') {
-  setState({ timeOutResponded: true });  
   const disabledRow = new ActionRowBuilder()
     .addComponents(
       new ButtonBuilder()
@@ -71,6 +70,7 @@ async function handleButtons(interaction) {
         .setDisabled(true)
     );
 
+  setState({ timeOutResponded: true });
   await interaction.message.edit({ components: [disabledRow] });
   await interaction.reply({
     content: '⏳ Running Time Out automation...',
@@ -78,12 +78,19 @@ async function handleButtons(interaction) {
   });
 
   try {
-    const success = await timeOut(log);
-    await interaction.channel.send('✅ Time Out successful!');
+    const { timedIn, workLog } = getState();
+    const log = workLog || 'Completed OJT tasks for the day.';
+    const { success, screenshotPath } = await timeOut(log);
+    await interaction.channel.send({
+      content: success
+        ? '✅ Time Out successful!'
+        : '❌ Time Out may have failed. Please check manually.',
+      files: screenshotPath ? [screenshotPath] : []
+    });
     resetState();
   } catch (err) {
     console.error('Time Out error:', err);
-    await interaction.channel.send('❌ Time Out failed. Please check manually.');
+    await interaction.channel.send('❌ Time Out failed with an error. Please check manually.');
   }
 }
 

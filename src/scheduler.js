@@ -6,7 +6,7 @@ const {
 } = require('discord.js');
 const { channelId } = require('./config');
 const { isWorkday } = require('./utils/isWorkday');
-const { timeIn } = require('./automation/ojt');
+const { timeIn, timeOut } = require('./automation/ojt');
 const { setState, getState, resetState } = require('./utils/state');
 
 let responded = false;
@@ -144,8 +144,13 @@ cron.schedule('57 13 * * *', async () => {
       await channel.send('⏰ No response received. Running automatic Time Out...');
 
       try {
-        // const success = await timeOut(log);
-        await channel.send('✅ Auto Time Out successful!');
+        const { success, screenshotPath } = await timeOut(log);
+        await channel.send({
+          content: success
+            ? '✅ Auto Time Out successful!'
+            : '❌ Auto Time Out may have failed. Please check manually.',
+          files: screenshotPath ? [screenshotPath] : []
+        });
         resetState();
       } catch (err) {
         console.error('Auto Time Out error:', err);

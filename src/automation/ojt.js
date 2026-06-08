@@ -72,4 +72,35 @@ async function verifySuccess(frame) {
   return !noSession;
 }
 
-module.exports = { login, timeIn, verifySuccess };
+async function timeOut(logText) {
+  const browser = await chromium.launch({ headless: false });
+
+  const context = await browser.newContext({
+    storageState: 'auth/session.json'
+  });
+
+  const page = await context.newPage();
+  await page.goto(ojtUrl);
+  await page.waitForTimeout(8000);
+
+  const frame = page.frameLocator('iframe[name="fullscreen-app-host"]');
+  await frame.getByRole('button', { name: 'Attendance', exact: true }).click();
+  await page.waitForTimeout(3000);
+
+  // these selectors will be confirmed tomorrow during your actual shift
+  await frame.getByRole('button', { name: 'Time - Out', exact: true }).click();
+  await page.waitForTimeout(2000);
+  await frame.getByRole('button', { name: 'YES', exact: true }).click();
+  await page.waitForTimeout(3000);
+
+  const success = await verifySuccess(frame);
+
+  const screenshotPath = `screenshots/timeout-${Date.now()}.png`;
+  await page.screenshot({ path: screenshotPath });
+  console.log(`Screenshot saved: ${screenshotPath}`);
+
+  await browser.close();
+  return { success, screenshotPath };
+}
+
+module.exports = { login, timeIn, timeOut, verifySuccess };
